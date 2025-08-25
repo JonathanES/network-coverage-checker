@@ -162,7 +162,6 @@ cython_debug/
 #  .idea/
 
 # Application-specific
-data/
 *.db
 *.sqlite
 logs/
