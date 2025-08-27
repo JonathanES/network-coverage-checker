@@ -1,3 +1,4 @@
+import asyncio
 from typing import Dict, List
 from src.data.coverage_loader import CoverageDataLoader
 from src.models.coverage import (
@@ -31,7 +32,7 @@ class CoverageService:
         self, locations: Dict[str, str]
     ) -> LocationCoverageResults:
         """
-        Get coverage information for multiple locations
+        Get coverage information for multiple locations in parallel
 
         Args:
             locations: Dictionary mapping location IDs to addresses
@@ -39,13 +40,28 @@ class CoverageService:
         Returns:
             Dictionary mapping location IDs to coverage information
         """
-        results = {}
+        tasks = [
+            self._process_location_coverage_with_id(location_id, address)
+            for location_id, address in locations.items()
+        ]
 
-        for location_id, address in locations.items():
-            coverage_data = await self._process_location_coverage(address)
+        results_list = await asyncio.gather(*tasks, return_exceptions=True)
+
+        results = {}
+        for result in results_list:
+            if isinstance(result, Exception):
+                continue
+            location_id, coverage_data = result
             results[location_id] = self._build_operator_coverage(coverage_data)
 
         return results
+
+    async def _process_location_coverage_with_id(
+        self, location_id: str, address: str
+    ) -> tuple[str, Dict[str, Dict[str, bool]]]:
+        """Process a single location with its ID for parallel processing"""
+        coverage_data = await self._process_location_coverage(address)
+        return location_id, coverage_data
 
     async def _process_location_coverage(
         self, address: str
@@ -72,15 +88,21 @@ class CoverageService:
     ) -> Dict[str, Dict[str, bool]]:
         """
         Aggregate coverage by checking each record once and determining what networks are available
-        based on distance.
+        based on distance. Optimized with early termination.
 
         For each operator and mobile network generation combination, returns:
         - True: if there's at least one tower of that operator with that network generation within range
         - False: if no towers of that operator with that network generation are found within range
         """
         coverage = {}
+        max_radius = max(NETWORK_GEN_RADIUS_KM.values())  # 30km
 
         for record in self.coverage_records:
+            operator = record.operator.lower()
+
+            if operator in coverage and all(coverage[operator].values()):
+                continue
+
             tower_lon, tower_lat = self.coordinate_service.lambert93_to_gps(
                 record.x, record.y
             )
@@ -89,18 +111,31 @@ class CoverageService:
                 lat, lon, tower_lat, tower_lon
             )
 
-            operator = record.operator.lower()
+            if distance > max_radius:
+                continue
 
             if operator not in coverage:
                 coverage[operator] = {"2G": False, "3G": False, "4G": False}
 
-            if record.network_2g == 1 and distance <= NETWORK_GEN_RADIUS_KM["2G"]:
+            if (
+                not coverage[operator]["2G"]
+                and record.network_2g == 1
+                and distance <= NETWORK_GEN_RADIUS_KM["2G"]
+            ):
                 coverage[operator]["2G"] = True
 
-            if record.network_3g == 1 and distance <= NETWORK_GEN_RADIUS_KM["3G"]:
+            if (
+                not coverage[operator]["3G"]
+                and record.network_3g == 1
+                and distance <= NETWORK_GEN_RADIUS_KM["3G"]
+            ):
                 coverage[operator]["3G"] = True
 
-            if record.network_4g == 1 and distance <= NETWORK_GEN_RADIUS_KM["4G"]:
+            if (
+                not coverage[operator]["4G"]
+                and record.network_4g == 1
+                and distance <= NETWORK_GEN_RADIUS_KM["4G"]
+            ):
                 coverage[operator]["4G"] = True
 
         return coverage
