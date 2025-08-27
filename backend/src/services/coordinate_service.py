@@ -31,7 +31,6 @@ class CoordinateService:
         Returns:
             Tuple of (longitude, latitude) in WGS84
         """
-        # Use cache to avoid repeated conversions
         cache_key = f"{x},{y}"
 
         if cache_key not in self._gps_cache:

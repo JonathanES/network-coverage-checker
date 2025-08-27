@@ -11,7 +11,6 @@ class NetworkCoverage:
     network_4g: bool
 
 
-# Dynamic operator coverage - maps operator name to their network coverage
 OperatorCoverage = Dict[str, NetworkCoverage]
 
 LocationCoverageResults = Dict[str, OperatorCoverage]
