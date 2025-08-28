@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { HttpClient } from '@angular/common/http';
 
 interface AddressRequest {
   [addressId: string]: string;
@@ -27,6 +28,8 @@ interface AddressRequest {
 
     @Output() searchResults = new EventEmitter<any>();
 
+    constructor(private http: HttpClient) {}
+
     onSearch() {
       if (!this.addresses.trim()) return;
 
@@ -36,22 +39,31 @@ interface AddressRequest {
         .filter(addr => addr.length > 0);
 
       const requestPayload: AddressRequest = {};
-      addressList.forEach((address, index) => {
-        requestPayload[`id${index + 1}`] = address;
+      addressList.forEach((address) => {
+        const uuid = crypto.randomUUID();
+        requestPayload[uuid] = address;
       });
 
       console.log('Request payload:', requestPayload);
 
-      // TODO: Replace with actual API call
-      const mockResults: any = {};
-      Object.keys(requestPayload).forEach(id => {
-        mockResults[id] = {
-          "orange": {"2G": true, "3G": true, "4G": false},
-          "SFR": {"2G": true, "3G": true, "4G": true},
-          "bouygues": {"2G": true, "3G": false, "4G": false}
-        };
-      });
-
-      this.searchResults.emit(mockResults);
+      this.http.post<any>('http://localhost:8000/api/v1/coverage', requestPayload)
+        .subscribe({
+          next: (results) => {
+            console.log('API response:', results);
+            this.searchResults.emit(results);
+          },
+          error: (error) => {
+            console.error('API error:', error);
+            const mockResults: any = {};
+            Object.keys(requestPayload).forEach(id => {
+              mockResults[id] = {
+                "orange": {"2G": true, "3G": true, "4G": false},
+                "SFR": {"2G": true, "3G": true, "4G": true},
+                "bouygues": {"2G": true, "3G": false, "4G": false}
+              };
+            });
+            this.searchResults.emit(mockResults);
+          }
+        });
     }
 }
