@@ -25,8 +25,10 @@ interface AddressRequest {
   })
   export class NetworkSearchComponent {
     addresses: string = '';
+    errorMessage: string = '';
 
     @Output() searchResults = new EventEmitter<any>();
+    @Output() error = new EventEmitter<string>();
 
     constructor(private http: HttpClient) {}
 
@@ -39,30 +41,29 @@ interface AddressRequest {
         .filter(addr => addr.length > 0);
 
       const requestPayload: AddressRequest = {};
+      const addressMapping: { [uuid: string]: string } = {};
+
       addressList.forEach((address) => {
         const uuid = crypto.randomUUID();
         requestPayload[uuid] = address;
+        addressMapping[uuid] = address;
       });
 
-      console.log('Request payload:', requestPayload);
+      this.errorMessage = '';
 
       this.http.post<any>('http://localhost:8000/api/v1/coverage', requestPayload)
         .subscribe({
           next: (results) => {
-            console.log('API response:', results);
-            this.searchResults.emit(results);
+            this.errorMessage = '';
+
+            const resultsWithAddresses = { ...results, _addressMapping: addressMapping };
+            this.searchResults.emit(resultsWithAddresses);
           },
           error: (error) => {
             console.error('API error:', error);
-            const mockResults: any = {};
-            Object.keys(requestPayload).forEach(id => {
-              mockResults[id] = {
-                "orange": {"2G": true, "3G": true, "4G": false},
-                "SFR": {"2G": true, "3G": true, "4G": true},
-                "bouygues": {"2G": true, "3G": false, "4G": false}
-              };
-            });
-            this.searchResults.emit(mockResults);
+            const errorMsg = `Failed to get coverage data: ${error.message || 'Network error'}`;
+            this.errorMessage = errorMsg;
+            this.error.emit(errorMsg);
           }
         });
     }
