@@ -5,24 +5,13 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+      target: development
     ports:
       - "8000:8000"
     volumes:
       - ./backend/src:/app/src
+      - ./backend/tests:/app/tests
       - ./data:/app/data
     environment:
       - ENVIRONMENT=development
     command: ["poetry", "run", "uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
-
-  backend-test:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    volumes:
-      - ./backend/src:/app/src
-      - ./backend/tests:/app/tests
-    environment:
-      - ENVIRONMENT=test
-    command: ["poetry", "run", "pytest", "-v"]
-    depends_on:
-      - backend
