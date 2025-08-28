@@ -1,0 +1,17 @@
+.search-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 1rem;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .address-field {
+    flex: 1;
+  }
+
+  .search-button {
+    width: 120px;
+    height: 56px;
+  }

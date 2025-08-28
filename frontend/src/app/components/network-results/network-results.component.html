@@ -1,0 +1,21 @@
+<div class="results-container" *ngIf="results">
+    <mat-card class="result-card" *ngFor="let addressId of addresses">
+      <mat-card-header>
+        <mat-card-title>{{ addressId }}</mat-card-title>
+      </mat-card-header>
+
+      <mat-card-content>
+        <div class="operator-section" *ngFor="let operator of operators">
+          <h4 class="operator-name">{{ operator }}</h4>
+          <div class="coverage-list">
+            <div class="coverage-item" *ngFor="let network of networkTypes">
+              <span class="network-type">{{ network }}:</span>
+              <span class="status" [ngClass]="getCoverage(addressId, operator, network) ? 'ok' : 'ko'">
+                {{ getStatusText(getCoverage(addressId, operator, network)) }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>

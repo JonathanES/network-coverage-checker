@@ -1,0 +1,17 @@
+<div class="search-container">
+    <mat-form-field class="address-field">
+      <mat-label>Addresses</mat-label>
+      <textarea
+      matInput
+      matTextareaAutosize
+      matAutosizeMinRows="2"
+      matAutosizeMaxRows="5"
+      [(ngModel)]="addresses"
+      placeholder="Enter multiple addresses separated by commas&#10;e.g., 157 boulevard Mac Donald 75019 Paris, 5 avenue Anatole France 75007 Paris">
+    </textarea>
+    </mat-form-field>
+
+    <button mat-flat-button color="primary" (click)="onSearch()" class="search-button">
+      Search
+    </button>
+  </div>

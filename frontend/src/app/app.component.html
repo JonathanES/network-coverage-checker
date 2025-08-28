@@ -1,3 +1,5 @@
 <div class="app-container">
     <h1>Network Coverage Checker</h1>
+    <app-network-search (searchResults)="onSearchResults($event)"></app-network-search>
+    <app-network-results [results]="searchResults"></app-network-results>
   </div>
