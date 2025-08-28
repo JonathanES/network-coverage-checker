@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict
+from typing import Dict, Optional
 
 
 @dataclass
@@ -11,6 +11,14 @@ class NetworkCoverage:
     network_4g: bool
 
 
+@dataclass
+class LocationCoverageData:
+    """Coverage data for a single location, with optional error handling"""
+
+    error: Optional[str]
+    operators: Dict[str, NetworkCoverage]
+
+
 OperatorCoverage = Dict[str, NetworkCoverage]
 
-LocationCoverageResults = Dict[str, OperatorCoverage]
+LocationCoverageResults = Dict[str, LocationCoverageData]

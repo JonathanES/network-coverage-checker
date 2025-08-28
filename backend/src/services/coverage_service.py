@@ -5,6 +5,7 @@ from src.models.coverage import (
     NetworkCoverage,
     OperatorCoverage,
     LocationCoverageResults,
+    LocationCoverageData,
 )
 from src.models.records import CoverageRecord
 from src.services.geocoding_service import GeocodingService
@@ -48,11 +49,21 @@ class CoverageService:
         results_list = await asyncio.gather(*tasks, return_exceptions=True)
 
         results = {}
-        for result in results_list:
+        location_ids = list(locations.keys())
+
+        for i, result in enumerate(results_list):
+            location_id = location_ids[i]
+
             if isinstance(result, Exception):
+                results[location_id] = LocationCoverageData(
+                    error=str(result), operators={}
+                )
                 continue
-            location_id, coverage_data = result
-            results[location_id] = self._build_operator_coverage(coverage_data)
+
+            _, coverage_data = result
+            results[location_id] = LocationCoverageData(
+                error=None, operators=self._build_operator_coverage(coverage_data)
+            )
 
         return results
 
@@ -78,7 +89,7 @@ class CoverageService:
         coordinates = await self.geocoding_service.geocode_address(address)
 
         if not coordinates:
-            return {}
+            raise ValueError(f"Could not geocode address: {address}")
 
         lat, lon = coordinates
         return self._lookup_coverage_by_coordinates(lat, lon)
@@ -95,7 +106,7 @@ class CoverageService:
         - False: if no towers of that operator with that network generation are found within range
         """
         coverage = {}
-        max_radius = max(NETWORK_GEN_RADIUS_KM.values())  # 30km
+        max_radius = max(NETWORK_GEN_RADIUS_KM.values())
 
         for record in self.coverage_records:
             operator = record.operator.lower()
