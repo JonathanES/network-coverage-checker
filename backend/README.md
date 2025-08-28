@@ -24,29 +24,35 @@ poetry run pre-commit install
 ### Run the Service
 
 ```bash
-# Using Docker (recommended)
+# Using Docker (recommended - port 8000)
 docker-compose -f ../docker-compose.dev.yml up --build
 
-# Using Poetry (alternative - port 8001)
+# Using Poetry (for debugging - port 8001)
 poetry run uvicorn src.api.main:app --reload --host 0.0.0.0 --port 8001
 ```
 
 ### Run Tests
 
-```bash
-# Using Docker
-docker-compose -f ../docker-compose.dev.yml run --rm backend-test
+Tests are **not** run automatically. Run them manually when needed:
 
-# Using Poetry
-poetry run pytest -v
+```bash
+# Run all tests
+docker-compose -f docker-compose.dev.yml run --rm backend poetry run pytest -vv
+
+# Run specific test categories
+docker-compose -f docker-compose.dev.yml run --rm backend poetry run pytest tests/unit/ -vv
+docker-compose -f docker-compose.dev.yml run --rm backend poetry run pytest tests/int/ -vv
+
+# Run specific test file
+docker-compose -f docker-compose.dev.yml run --rm backend poetry run pytest tests/unit/test_coverage_service.py -v
 ```
 
 ## API Documentation
 
 Once the service is running, you can access the interactive API documentation:
 
-- **Swagger UI**: `http://localhost:8000/docs`
-- **ReDoc**: `http://localhost:8000/redoc`
+- **Docker**: `http://localhost:8000/docs` (Swagger UI) | `http://localhost:8000/redoc` (ReDoc)
+- **Poetry**: `http://localhost:8001/docs` (Swagger UI) | `http://localhost:8001/redoc` (ReDoc)
 
 ## Documentation
 
