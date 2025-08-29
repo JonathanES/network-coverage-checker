@@ -2,6 +2,8 @@
 
 A full-stack application for checking network coverage with a FastAPI backend and Angular frontend.
 
+![Demo](assets/demo.gif)
+
 ## Getting Started
 
 ### Prerequisites
@@ -35,6 +37,7 @@ Backend API: `http://localhost:8000` (Swagger docs: `http://localhost:8000/docs`
 ### Run Both Frontend and Backend
 
 1. **Start the backend with Docker**:
+
    ```bash
    docker-compose -f docker-compose.dev.yml up --build
    ```
@@ -72,6 +75,7 @@ The frontend will be available at `http://localhost:4200` and will proxy API req
 ### Full Development Setup
 
 1. **Start the backend** (in one terminal):
+
    ```bash
    cd backend
    poetry install
